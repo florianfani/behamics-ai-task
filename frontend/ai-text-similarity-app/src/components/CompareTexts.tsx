@@ -107,7 +107,7 @@ const CompareTexts: React.FC = () => {
           <button
             onClick={handleCompare}
             disabled={isLoading}
-            className={`w-full py-3 px-6 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg border border-green-400 relative ${
+            className={`button w-full py-3 px-6 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg border border-green-400 relative ${
               isLoading ? "opacity-70 cursor-not-allowed" : ""
             }`}
           >

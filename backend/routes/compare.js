@@ -1,6 +1,7 @@
 import express from "express";
 import { db } from "../db.js";
 import axios from "axios";
+import { ObjectId } from "mongodb";
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.post("/compare", async (req, res) => {
     const response = await axios.post(
       // use 'http://localhost:8000/compute-embeddings' if not running on docker
       "http://ai-service:8000/compute-embeddings",
+      //"http://127.0.0.1:8000/compute-embeddings",
       {
         text1,
         text2,
@@ -63,6 +65,29 @@ router.get("/compare", async (req, res) => {
     });
   } catch (error) {
     console.error("Error in /comparisons:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/compare/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid comparison ID" });
+    }
+
+    const result = await db.collection("comparisons").deleteOne({
+      _id: new ObjectId(id),
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Comparison not found" });
+    }
+
+    res.status(200).json({ message: "Comparison deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting comparison:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
