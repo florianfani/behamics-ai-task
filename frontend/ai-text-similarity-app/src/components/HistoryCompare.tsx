@@ -1,6 +1,10 @@
 import { useState } from "react";
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { fetchComparisons } from "../api";
+import {
+  useQuery,
+  UseQueryResult,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { fetchComparisons, deleteComparison } from "../api";
 
 interface Comparison {
   _id: string;
@@ -18,12 +22,23 @@ interface ComparisonsResponse {
 
 export default function ComparisonsList() {
   const [page, setPage] = useState(1);
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError }: UseQueryResult<ComparisonsResponse> =
     useQuery({
       queryKey: ["comparisons", page],
       queryFn: () => fetchComparisons(page),
     });
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteComparison(id);
+
+      await queryClient.invalidateQueries({ queryKey: ["comparisons"] });
+    } catch (error) {
+      console.error("Error deleting comparison:", error);
+    }
+  };
 
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error fetching comparisons.</p>;
@@ -50,15 +65,24 @@ export default function ComparisonsList() {
                     {comp.text1}
                   </p>
                 </div>
+
                 <div className="space-y-2">
                   <h3 className="text-green-400 text-sm font-medium uppercase tracking-wider mb-2">
                     Text 2
                   </h3>
+
                   <p className="text-white/90 bg-black/20 p-3 rounded-lg min-h-[70px] whitespace-pre-wrap">
                     {comp.text2}
                   </p>
                 </div>
+
                 {comp.model}
+                <button
+                  onClick={() => handleDelete(comp._id)}
+                  className="button-delete hover:text-red-500"
+                >
+                  Delete
+                </button>
               </div>
               <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 border-t border-white/10">
                 <div className="flex items-center space-x-2">
@@ -75,15 +99,17 @@ export default function ComparisonsList() {
                     {comp.similarity.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-sm text-white/60 mt-2 sm:mt-0">
-                  {new Date(comp.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+                <div className="flex items-center space-x-4">
+                  <p className="text-sm text-white/60">
+                    {new Date(comp.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
               </div>
             </div>
           ))
@@ -95,11 +121,11 @@ export default function ComparisonsList() {
       </div>
 
       {data.totalPages > 1 && (
-        <div className="mt-8 flex justify-center items-center space-x-6">
+        <div className="mt-1 flex justify-center items-center space-x-6">
           <button
             onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
             disabled={page === 1}
-            className="px-6 py-2 bg-green-500/20 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-500/30 transition-all duration-300 font-medium"
+            className="button px-6 py-2 bg-green-500/20 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-500/30 transition-all duration-300 font-medium"
           >
             Previous
           </button>
@@ -111,7 +137,7 @@ export default function ComparisonsList() {
               setPage((prev) => (prev < data.totalPages ? prev + 1 : prev))
             }
             disabled={page === data.totalPages}
-            className="px-6 py-2 bg-green-500/20 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-500/30 transition-all duration-300 font-medium"
+            className="button px-6 py-2 bg-green-500/20 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-500/30 transition-all duration-300 font-medium"
           >
             Next
           </button>

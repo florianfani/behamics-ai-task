@@ -54,4 +54,13 @@ export const compareTexts = async (
   }
 };
 
+export const deleteComparison = async (id: string): Promise<void> => {
+  try {
+    await api.delete(`/compare/${id}`);
+  } catch (error) {
+    console.error("Error deleting comparison:", error);
+    throw new Error("Failed to delete comparison");
+  }
+};
+
 export default api;
